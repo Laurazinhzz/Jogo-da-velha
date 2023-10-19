@@ -8,15 +8,16 @@
     - OK números e dentro do intervalo correto (1-3)
     - OK posição vazia
 - OK Verifica se acabou e quem ganhou
-  - Velha
+  - OK Velha
   - OK X ganhou
-  - O ganhou
+  - OK O ganhou
+- OK IMPLEMENTAR selecionar posição com setinhas
+- IMPLEMENTAR selecionar quem começa
 - IMPLEMENTAR X1 com a máquina
   - Algoritmo que converte Tabuleiro em Tabuleiro de Decisão
   - Escolhe casa de acordo com Tabuleiro de Decisão
-- IMPLEMENTAR selecionar posição com setinhas
-- IMPLEMENTAR selecionar quem começa
 """
+import io_custom
 from itertools import cycle
 
 def gera_tabuleiro_em_texto(tabuleiro: list[list[str]]):
@@ -87,20 +88,52 @@ def detecta_fim_de_jogo(tabuleiro: list[list[str]], jogador: str) -> str:
     if diagonal_secundaria: return jogador
     todo_preenchido = all([reduce(lambda acc, atual: acc and atual != ' ',linha,True) for linha in tabuleiro])
     return 'Velha' if todo_preenchido else ''
-tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
 
 print('Jogo da Velha')
 input('Pressione alguma tecla para começar')
 
+tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
+tabuleiro_visual = [['X', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
+# TODO: refatorar isso
+# Objetivo: criar lista com todas as posições (linha,coluna) da matriz
+from itertools import chain
+espacos_livres = list(chain(*[[(num,x) for x in linha] for num, linha in enumerate([list(range(len(linha))) for linha in tabuleiro])]))
+
+linha,coluna = 0,0
+
 jogadores = ['X', 'O']
 
 ciclo = cycle(jogadores)
+io_custom.clear()
 
 for jogador in ciclo:
-    print(gera_tabuleiro_em_texto(tabuleiro))
     print(f'Vez do jogador {jogador}')
-    linha, coluna = le_jogada_valida_input()
-    tabuleiro[linha-1][coluna-1] = jogador
+    print(gera_tabuleiro_em_texto(tabuleiro_visual))
+    while True:
+        if io_custom.kbhit():
+            letra = io_custom.getch()
+            if letra == '\n':
+                if (linha,coluna) in espacos_livres:
+                    espacos_livres.pop(espacos_livres.index((linha,coluna)))
+                    break
+            # TODO2: habilitar setinhas do teclado como alternativa ao wasd
+            if letra not in 'wasd':
+                continue
+            tabuleiro_visual[linha][coluna] = tabuleiro[linha][coluna]
+            if letra == 'w':
+                linha = (linha-1)%3
+            if letra == 's':
+                linha = (linha+1)%3
+            if letra == 'd':
+                coluna = (coluna+1)%3
+            if letra == 'a':
+                coluna = (coluna-1)%3
+            tabuleiro_visual[linha][coluna] = jogador
+            io_custom.clear()
+            print(f'Vez do jogador {jogador}')
+            print(gera_tabuleiro_em_texto(tabuleiro_visual))
+    tabuleiro[linha][coluna] = jogador
+    tabuleiro_visual = [x[:] for x in tabuleiro]
     resultado = detecta_fim_de_jogo(tabuleiro,jogador)
     if resultado:
         print(f'fim de jogo: Deu {resultado}')
