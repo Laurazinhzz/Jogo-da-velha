@@ -1,0 +1,111 @@
+"""Jogo da Velha
+
+- OK Imprimir o tabuleiro
+  - Matriz 3x3
+- OK Modo 2 jogadores: X e O
+  - OK inputs com posição linha x coluna
+  - OK validar inputs
+    - OK números e dentro do intervalo correto (1-3)
+    - OK posição vazia
+- OK Verifica se acabou e quem ganhou
+  - Velha
+  - OK X ganhou
+  - O ganhou
+- IMPLEMENTAR X1 com a máquina
+  - Algoritmo que converte Tabuleiro em Tabuleiro de Decisão
+  - Escolhe casa de acordo com Tabuleiro de Decisão
+- IMPLEMENTAR selecionar posição com setinhas
+- IMPLEMENTAR selecionar quem começa
+"""
+from itertools import cycle
+
+def gera_tabuleiro_em_texto(tabuleiro: list[list[str]]):
+  '''Gera versão de impressão do tabuleiro atual
+  '''
+  lista_textos = [' ' + ' | '.join(linha) for linha in tabuleiro]
+  return '\n---+---+---\n'.join(lista_textos)
+  ##return '\n---+---+---\n'.join(\
+  ##    ' ' + ' | '.join(linha)\
+  ##    for linha in matriz # Transforma matriz 3x3 em lista 3
+  ##)
+
+def le_jogada_valida_input() -> (int,int):
+    """Lê do teclado uma jogada válida
+
+    Guiando o jogador a fornecer entradas válidas de linha e coluna
+    """
+    global tabuleiro
+    
+    print('A partir do esquema de linhas e colunas') #TODO: , digite números de 1 a 9')
+    while True:
+        linha,coluna = [int(numero) for numero in input("Fala os numero ai bb: ").split()][:2]
+        # Validação das entradas
+        while linha not in (1,2,3):
+            linha = input('linha inválida bb, tenta dnv: ')
+            if not linha.isdecimal(): continue
+            linha = int(linha)
+        while coluna not in (1,2,3):
+            coluna = input('coluna inválida bb, tenta dnv: ')
+            if not coluna.isdecimal(): continue
+            coluna = int(coluna)
+        if tabuleiro[linha-1][coluna-1] == ' ': break
+        print('posição inválida')
+    return linha,coluna
+
+def detecta_fim_de_jogo(tabuleiro: list[list[str]], jogador: str) -> str:
+    """Retorna '' ou jogador ou 'Velha'
+
+    >>> tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
+    >>> detecta_fim_de_jogo(tabuleiro, 'X')
+    ''
+    >>> tabuleiro = [["X", "X", "X"], ["X", "X", "X"], ["X", "X", "X"]]
+    >>> detecta_fim_de_jogo(tabuleiro, 'O')
+    'Velha'
+    >>> tabuleiro = [["O", "X", "X"], ["O", "X", "X"], ["O", "X", "X"]]
+    >>> detecta_fim_de_jogo(tabuleiro, 'O')
+    'O'
+    >>> tabuleiro = [["O", "O", "O"], ["X", "X", "X"], ["X", "X", "X"]]
+    >>> detecta_fim_de_jogo(tabuleiro, 'O')
+    'O'
+    >>> detecta_fim_de_jogo(tabuleiro, 'X')
+    'X'
+    >>> tabuleiro = [["O", "X", "X"], ["X", "O", "X"], ["X", "X", "O"]]
+    >>> detecta_fim_de_jogo(tabuleiro, 'O')
+    'O'
+    >>> tabuleiro = [["X", "X", "O"], ["X", "O", "X"], ["O", "X", "X"]]
+    >>> detecta_fim_de_jogo(tabuleiro, 'O')
+    'O'
+    """
+    from functools import reduce
+    linha = any([reduce(lambda acc, atual: acc and atual == jogador,linha,True) for linha in tabuleiro])
+    if linha: return jogador
+    coluna = any([reduce(lambda acc, atual: acc and atual == jogador,coluna,True) for coluna in zip(*tabuleiro)])
+    if coluna: return jogador
+    diagonal_principal = jogador == tabuleiro[0][0] == tabuleiro[1][1] == tabuleiro[2][2]
+    if diagonal_principal: return jogador
+    diagonal_secundaria = jogador == tabuleiro[0][2] == tabuleiro[1][1] == tabuleiro[2][0]
+    if diagonal_secundaria: return jogador
+    todo_preenchido = all([reduce(lambda acc, atual: acc and atual != ' ',linha,True) for linha in tabuleiro])
+    return 'Velha' if todo_preenchido else ''
+tabuleiro = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
+
+print('Jogo da Velha')
+input('Pressione alguma tecla para começar')
+
+jogadores = ['X', 'O']
+
+ciclo = cycle(jogadores)
+
+for jogador in ciclo:
+    print(gera_tabuleiro_em_texto(tabuleiro))
+    print(f'Vez do jogador {jogador}')
+    linha, coluna = le_jogada_valida_input()
+    tabuleiro[linha-1][coluna-1] = jogador
+    resultado = detecta_fim_de_jogo(tabuleiro,jogador)
+    if resultado:
+        print(f'fim de jogo: Deu {resultado}')
+        break
+
+# if __name__ == '__main__':
+#     import doctest
+#     doctest.testmod()
